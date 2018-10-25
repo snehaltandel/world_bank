@@ -1,2 +1,2 @@
-Initializing new Repository to read generic codes.
+Initializing new Repository for World_Bank Project.
 Repository created with curl.
