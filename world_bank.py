@@ -1,42 +1,31 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 import pyspark.sql.functions as f
-from pyspark.sql.functions import col, column
+from pyspark.sql.functions import col, column, udf, unix_timestamp
 from pyspark.sql.functions import desc
-# from pyspark.sql.functions import
-
 spark = SparkSession.builder.master('local').appName('world_bank').getOrCreate()
-schema = StructType([StructField('Country Name', StringType(), True),
-                     StructField('Date', StringType(), False),
-                     StructField('Transit: Railways, (million passenger-km)', StringType(), False),
-                     StructField('Transit: Passenger cars (per 1,000 people)', StringType(), False),
-                     StructField('Business: Mobile phone subscribers', StringType(), False),
-                     StructField('Business: Internet users (per 100 people)', StringType(), False),
-                     StructField('Health: Mortality', StringType(), False),
-                     StructField('under-5 (per 1,000 live births)', StringType(), False),
-                     StructField('Health: Health expenditure per capita (current US$)', StringType(), False),
-                     StructField('Health: Health expenditure, total (% GDP)', StringType(), False),
-                     StructField('Population: Total (count)', StringType(), False),
-                     StructField('Population: Urban (count)', StringType(), False),
-                     StructField('Population:: Birth rate, crude (per 1,000)', StringType(), False),
-                     StructField('Health: Life expectancy at birth, female (years)', StringType(), False),
-                     StructField('Health: Life expectancy at birth, male (years)', StringType(), False),
-                     StructField('Health: Life expectancy at birth, total (years)', StringType(), False),
-                     StructField('Population: Ages 0-14 (% of total)', StringType(), False),
-                     StructField('Population: Ages 15-64 (% of total)', StringType(), False),
-                     StructField('Population: Ages 65+ (% of total)', StringType(), False),
-                     StructField('Finance: GDP (current US$)', StringType(), False),
-                     StructField('Finance: GDP per capita (current US$)', StringType(), False)])
-df = spark.read.option('delimiter', ',').schema(schema).csv('data.csv')
-# df.cache()
+df = spark.read.format('csv')\
+    .option('inferSchema', 'true')\
+    .option('header', 'false')\
+    .load('Data.csv')
 
-df = df.withColumn('Date', df['Date'].cast(DateType()))\
-    .withColumn('Population: Urban (count)', df['Population: Urban (count)'].cast(LongType()))\
-    .withColumn('Population: Total (count)', df['Population: Total (count)'].cast(LongType()))\
-    .withColumn('Population:: Birth rate, crude (per 1,000)', df['Population:: Birth rate, crude (per 1,000)'].cast(DoubleType()))\
-    .withColumn('Finance: GDP (current US$)', df['Finance: GDP (current US$)'].cast(DoubleType()))\
-    .withColumn('Finance: GDP per capita (current US$)', df['Finance: GDP per capita (current US$)'].cast(DoubleType()))\
-    .withColumn('Business: Internet users (per 100 people)', df['Business: Internet users (per 100 people)'].cast(DoubleType()))
-df.printSchema()
-df.show()
-max_urban = df.agg(f.max('Population: Urban (count)').alias('max_urban')).show()
+''' NOTE:::: Remove ',' within the numbers in column to cast it to LongType to perform aggregations'''
+''' Cast column _c1 to DateType and _c10 to LongType'''
+df2 = df.withColumn('Date', f.from_unixtime(unix_timestamp(col('_c1'),'MM/dd/yyyy')).cast(DateType()))\
+    .withColumn('Total_Population', f.regexp_replace(df['_c10'], ',', '').cast(LongType()))
+
+''' Highest urban population - Country having the highest urban population'''
+max_urban = df2.agg(f.max('_c11').alias('max_urban')).show()
+
+''' Most populous Countries - List of countries in the descending order of their population'''
+top_pop = df2.groupBy(col('_c0').alias('Country'))\
+    .agg(f.sum(col('Total_Population')).alias('Highest_Population'))\
+    .sort(desc('Highest_Population'))\
+    .show()
+
+'''Highest population growth - Country with highest % population growth in past decade'''
+
+
+'''Highest GDP growth - List of Countries with highest GDP growth from 2009 to 2010 in descending order'''
+'''Internet usage grown - Country where Internet usage has grown the most in the past decade'''
+'''Youngest Country - Yearly distribution of youngest Countries'''
