@@ -21,3 +21,9 @@ max_urban = df2.groupBy(df2['_c0'].alias('Country'))\
     .show(1)
     # .limit(1).collect()
 # print(max_urban)
+
+''' Most populous Countries - List of countries in the descending order of their population'''
+top_pop = df2.groupBy(col('_c0').alias('Country'))\
+    .agg(f.sum(col('Total_Population')).alias('Highest_Population'))\
+    .sort(desc('Highest_Population'))\
+    .show()
