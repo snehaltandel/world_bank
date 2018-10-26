@@ -27,3 +27,13 @@ top_pop = df2.groupBy(col('_c0').alias('Country'))\
     .agg(f.sum(col('Total_Population')).alias('Highest_Population'))\
     .sort(desc('Highest_Population'))\
     .show()
+
+'''Highest population growth - Country with highest % population growth in past decade'''
+'''
+Difference between Total Population in year 2000 and Total Population in year 2010 for each country 
+'''
+df3 = df2.select(df2['_c0'].alias('Country'),'Date', 'Total_Population')
+
+df3.filter((col('Date')=='2000-07-01') | (col('Date')=='2010-07-01')).select('*')\
+    .orderBy('Country', desc('Date'))\
+    .show()
