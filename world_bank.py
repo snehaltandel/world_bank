@@ -9,4 +9,8 @@ df = spark.read.format('csv')\
     .option('header', 'false')\
     .load('World_Bank_Data.csv')
 
+'''  Remove ',' within the numbers in column to cast it to LongType '''
+
+df2 = df.withColumn('Date', f.from_unixtime(unix_timestamp(col('_c1'),'MM/dd/yyyy')).cast(DateType()))\
+    .withColumn('Total_Population', f.regexp_replace(df['_c10'], ',', '').cast(LongType()))
 
