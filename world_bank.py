@@ -21,6 +21,11 @@ max_urban = df2.groupBy(df2['_c0'].alias('Country'))\
     .show(1)
     # .limit(1).collect()
 # print(max_urban)
+'''SQL Way'''
+df2.createOrReplaceTempView('max_u')
+m_u = spark.sql("select _c0 as country, max(_c11) as max_urb from max_u group by country order by max_urb desc")
+m_u.show()
+
 
 ''' Most populous Countries - List of countries in the descending order of their population'''
 top_pop = df2.groupBy(col('_c0').alias('Country'))\
